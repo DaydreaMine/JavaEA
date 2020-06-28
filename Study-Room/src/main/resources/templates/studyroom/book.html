@@ -100,7 +100,7 @@
                     } else {
                         html += '<label class="weui-cell weui-check__label" for="tr-' + item.hour + '">' +
                             '                <div class="weui-cell__hd">' +
-                            '                    <input type="checkbox" class="weui-check" name="hours" id="tr-' + item.hour + '"><i class="weui-icon-checked"></i>' +
+                            '                    <input type="checkbox" class="weui-check" name="hours" id="tr-' +item.date+'_'+ item.hour + '" ><i class="weui-icon-checked"></i>' +
                             '                </div>' +
                             '                <div class="weui-cell__bd">' +
                             '                    <p>' + item.date + ' ' + convertHour2Text(item.hour) + '</p>' +

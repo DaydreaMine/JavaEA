@@ -19,7 +19,7 @@ public interface SeatService {
 
     SeatOrderResp order(int id);
 
-    void orderSeat(int id, List<BookHours> bookHours);
+    String orderSeat(int id, List<BookHours> bookHours);
 
     List<UserBookHistory> orderHistory();
 

@@ -56,7 +56,7 @@ public class UserController {
             return CommonResult.failed("密码错误！[99983]");
         }
 
-        String role = (user.getRole()=="ROLE_ADMIN")?"ROLE_ADMIN":"ROLE_USER";
+        String role = (user.getRole().equals("admin"))?"admin":"user";
         List<GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(role);
         org.springframework.security.core.userdetails.User userDetails = new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(), authorities
@@ -92,22 +92,22 @@ public class UserController {
     @ApiOperation(value = "获取座位情况", notes = "获取座位情况接口")
     @GetMapping(value = "/seat")
     public CommonResult getSeat() {
-        if (seatService.findSeat().size() != 0) {
+        if (seatService.findSeat().size() == 0) {
             CommonResult.failed("没有座位了!");
         }
-        return CommonResult.success("ok");
+        return CommonResult.success(seatService.findSeat(),"ok");
     }
 
     @ApiOperation(value = "预约座位时间情况", notes = "预约座位接口")
-    @GetMapping(value = "/seat/order")
-    public CommonResult order(@RequestParam Integer id) {
+    @GetMapping(value = "/seat/order/{id}")
+    public CommonResult order(@PathVariable(value = "id") Integer id) {
         return CommonResult.success(seatService.order(id), "ok");
     }
 
     @ApiOperation(value = "预约座位", notes = "预约座位接口")
-    @PostMapping(value = "/seat/order")
+    @PostMapping(value = "/seat/order/{id}")
     public CommonResult orderSeat(
-            @RequestParam int id,
+            @PathVariable(value = "id") int id,
             @RequestBody List<BookHours> bookHours) {
         seatService.orderSeat(id, bookHours);
         return CommonResult.success("ok");

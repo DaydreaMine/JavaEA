@@ -25,6 +25,7 @@ import java.util.List;
 public class SeatServiceImpl implements SeatService {
     //设置预约时间48小时以内
     public final Integer HOUR_NUMBER = 48;
+
     @Autowired
     SeatRecordDao seatRecordDao;
     @Autowired
@@ -45,12 +46,12 @@ public class SeatServiceImpl implements SeatService {
         seatExample.createCriteria().andStatusEqualTo(1);
         List<Seat> tempSeat = seatMapper.selectByExample(seatExample);
         List<SeatPosition> seatPositions = new ArrayList<>();
-        for (Seat seat:tempSeat){
-        SeatPosition seatPosition= new SeatPosition();
-        seatPosition.setId(seat.getId());
-        seatPosition.setStatus(seat.getStatus());
-        seatPosition.setName(seat.getName());
-        seatPositions.add(seatPosition);
+        for (Seat seat : tempSeat) {
+            SeatPosition seatPosition = new SeatPosition();
+            seatPosition.setId(seat.getId());
+            seatPosition.setStatus(seat.getStatus());
+            seatPosition.setName(seat.getName());
+            seatPositions.add(seatPosition);
         }
         return seatPositions;
     }
@@ -92,24 +93,28 @@ public class SeatServiceImpl implements SeatService {
         List<BookHours> bookHours = new ArrayList<>();
         //生成预约时间（48）
         for (int i = 0; i < HOUR_NUMBER; i++) {
-            bookHours.get(i).setData(data);
-            bookHours.get(i).setHour(nowHour);
-            bookHours.get(i).setHasBooked(true);
             if (nowHour + 1 > 24) {
-                nowHour = 0;
+                nowHour = 1;
                 Date date1 = DateUtil.parse(data);
                 date1 = DateUtil.offsetDay(date1, 1);
                 data = DateUtil.formatDate(date1);
             } else {
                 nowHour++;
             }
+            BookHours bookHour =new BookHours();
+            bookHour.setData(data);
+            bookHour.setHour(nowHour);
+            bookHour.setHasBooked(true);
+            bookHours.add(bookHour);
         }
         //已预约的 true->false
-        for (int i = 0; i < HOUR_NUMBER; i++) {
-            for (int j = 0; j < tempSR.size(); j++) {
-                if (tempSR.get(j).getData().equals(data)) {
-                    if (tempSR.get(j).getHour() == nowHour) {
-                        bookHours.get(i).setHasBooked(false);
+        if (tempSR.size()>0){
+            for (int i = 0; i < HOUR_NUMBER; i++) {
+                for (int j = 0; j <tempSR.size(); j++) {
+                    if (tempSR.get(j).getData().equals(data)) {
+                        if (tempSR.get(j).getHour() == nowHour) {
+                            bookHours.get(i).setHasBooked(false);
+                        }
                     }
                 }
             }
@@ -125,9 +130,19 @@ public class SeatServiceImpl implements SeatService {
 
     //预约post
     @Override
-    public void orderSeat(int id, List<BookHours> bookHours) {
+    public String orderSeat(int id, List<BookHours> bookHours) {
         Seat seat = seatMapper.selectByPrimaryKey(id);
         User user = select();
+        SeatRecordExample example = new SeatRecordExample();
+        example.createCriteria().andUserIdEqualTo(user.getId());
+        List<SeatRecord> seatRecords=seatRecordMapper.selectByExample(example);
+        if (seatRecords.size()!=0){
+            for (SeatRecord seatRecord:seatRecords){
+                if (!seatRecord.getSeatName().equals(seat.getName())){
+                    return "只能预约一个座位";
+                }
+            }
+        }
         SeatRecord seatRecord = new SeatRecord();
         for (BookHours bookHours1 : bookHours) {
             seatRecord.setData(bookHours1.getData());
@@ -137,6 +152,7 @@ public class SeatServiceImpl implements SeatService {
             seatRecord.setSeatName(seat.getName());
             seatRecordMapper.insert(seatRecord);
         }
+        return "ok";
     }
 
     //通过名字获取座位座位
@@ -185,8 +201,8 @@ public class SeatServiceImpl implements SeatService {
     @Override
     public List<SeatPosition> getSeat() {
         List<SeatPosition> positions = new ArrayList<>();
-        List<Seat> seats=seatDao.getSeat();
-        for (Seat seat:seats){
+        List<Seat> seats = seatDao.getSeat();
+        for (Seat seat : seats) {
             SeatPosition position = new SeatPosition();
             position.setStatus(seat.getStatus());
             position.setName(seat.getName());
@@ -204,7 +220,7 @@ public class SeatServiceImpl implements SeatService {
     }
 
     @Override
-    public void addSeat(Seat seat){
+    public void addSeat(Seat seat) {
         seatMapper.insert(seat);
     }
 
@@ -214,7 +230,7 @@ public class SeatServiceImpl implements SeatService {
 //        List<User> users = userFuckDao.getUser();
         List<SeatRecord> seatRecords = seatRecordDao.getSeatRecord();
         List<AdminRecord> adminRecords = new ArrayList<>();
-        for (int i=0;i<seatRecords.size();i++) {
+        for (int i = 0; i < seatRecords.size(); i++) {
             Position position = new Position();
             SeatRecord seatRecord = seatRecords.get(i);
             Seat seat = seatDao.getSeatByName(seatRecord.getSeatName());
@@ -226,7 +242,7 @@ public class SeatServiceImpl implements SeatService {
             adminRecord.setCreatedAt(DateUtil.formatDate(seatRecord.getCreatedAt()));
             adminRecord.setDate(seatRecord.getData());
             adminRecord.setHour(seatRecord.getHour());
-            adminRecord.setId(i+1);
+            adminRecord.setId(i + 1);
             adminRecord.setPosition(position);
             adminRecord.setPositionId(seat.getId());
             adminRecord.setUser(user);
@@ -238,13 +254,13 @@ public class SeatServiceImpl implements SeatService {
     }
 
     @Override
-    public void cancelRecords(CancelSeatParam param){
+    public void cancelRecords(CancelSeatParam param) {
         SeatRecordExample example = new SeatRecordExample();
         example.createCriteria().andIdEqualTo(param.getUserId())
                 .andSeatNameEqualTo(param.getSeatName())
                 .andDataEqualTo(param.getData())
                 .andHourEqualTo(param.getHour());
-        SeatRecord seatRecord= seatRecordMapper.selectByExample(example).get(0);
+        SeatRecord seatRecord = seatRecordMapper.selectByExample(example).get(0);
         seatRecord.setHasbooked(param.isHasBook());
         seatRecordMapper.updateByPrimaryKey(seatRecord);
     }

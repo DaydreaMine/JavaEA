@@ -65,18 +65,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/**.png",
                 "/**.gif",
                 "/studyroom/**",
-                "/api/user/weather",
                 "/api/user/login",
                 "/api/user/lgout",
                 "/api/user/register",
-                "/api/user/seat/order/{id}",
-                "/a/aaa"
         };
 
         http//开启登录配置
                 .authorizeRequests()
-                //.antMatchers("/user").hasAuthority("user")//表示访问 /user 这个接口，需要具备 user 这个角色
-                .antMatchers("/admin").hasAuthority("admin")//表示访问 /admin 这个接口，需要具备 admin 这个角色
+                .antMatchers("/api/user").hasAuthority("user")//表示访问 /user 这个接口，需要具备 user 这个角色
+                .antMatchers("/ums/admin").hasAuthority("admin")//表示访问 /admin 这个接口，需要具备 admin 这个角色
                 .antMatchers(allowList).permitAll()
                 .anyRequest().authenticated()//表示剩余的其他接口，登录之后就能访问
 

@@ -42,6 +42,7 @@ public class UserServiceImpl implements UserService {
         }
         String passwordHash = BCrypt.hashpw(user.getPassword());
         user.setPassword(passwordHash);
+        user.setRole("user");
         userMapper.insert(user);
         return CommonResult.success("注册成功!");
     }

@@ -6,8 +6,8 @@ import club.banyuan.sr.bo.Position;
 import java.util.List;
 
 public class SeatOrderResp {
-    private List<BookHours> bookHours;
     private Position position;
+    private List<BookHours> bookHours;
 
     public List<BookHours> getBookHours() {
         return bookHours;
